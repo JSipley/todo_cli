@@ -41,24 +41,22 @@ fn read_xml(filename: &str) -> Result<Vec<Task>, Box<dyn std::error::Error>> {
 
     for event in parser {
         match event? {
-            XmlEvent::StartElement { name, .. } => match name.local_name.as_str() {
-                "Task" => {
+            XmlEvent::StartElement { name, .. } => {
+                if name.local_name == "Task" {
                     current_task = Some(Task {
                         description: String::new(),
                         due_date: String::new(),
                         important: String::new(),
                     });
                 }
-                _ => {}
-            },
-            XmlEvent::EndElement { name } => match name.local_name.as_str() {
-                "Task" => {
+            }
+            XmlEvent::EndElement { name } => {
+                if name.local_name == "Task" {
                     if let Some(task) = current_task.take() {
                         task_list.push(task);
                     }
                 }
-                _ => {}
-            },
+            }
             XmlEvent::Characters(text) => {
                 if let Some(ref mut task) = current_task {
                     match task {
