@@ -2,7 +2,7 @@ use std::fs::File;
 use std::io::BufReader;
 use xml::reader::{EventReader, XmlEvent};
 
-#[derive(Debug)]
+#[derive(Debug, PartialEq)]
 struct Task {
     description: String,
     due_date: String,
@@ -97,9 +97,36 @@ fn main() {
 
 #[cfg(test)]
 mod tests {
+    use super::*;
+
+    const XML_TEST_FILE_PATH: &str = "xml_test_files/";
+
     //Test read_xml functionality
     #[test]
-    fn read_valid_task_data() {}
+    fn read_valid_task_data() {
+        let expected_tasks: Vec<Task> = vec![
+            Task {
+                description: "Example task one".to_string(),
+                due_date: "1/25/2023".to_string(),
+                important: "y".to_string(),
+            },
+            Task {
+                description: "Example task two".to_string(),
+                due_date: "3/10/2023".to_string(),
+                important: "n".to_string(),
+            },
+            Task {
+                description: "Example task three".to_string(),
+                due_date: "5/31/2023".to_string(),
+                important: "n".to_string(),
+            },
+        ];
+
+        let filename = XML_TEST_FILE_PATH.to_owned() + "valid_test_tasks.xml";
+        let result_tasks = read_xml(&filename).unwrap();
+
+        assert_eq!(result_tasks, expected_tasks);
+    }
     #[test]
     fn read_invalid_task_data() {}
     #[test]
