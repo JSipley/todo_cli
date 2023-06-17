@@ -20,16 +20,14 @@ impl TaskManager {
 
     fn fetch_tasks(&self) -> &[Task] {
         &self.tasks
-    } 
+    }
 
     fn add_task(&mut self, task: Task) {
         self.tasks.push(task);
     }
 }
 
-static mut TASK_MANAGER: TaskManager = TaskManager {
-    tasks: Vec::new(),
-};
+static mut TASK_MANAGER: TaskManager = TaskManager { tasks: Vec::new() };
 
 fn read_xml(filename: &str) -> Result<Vec<Task>, Box<dyn std::error::Error>> {
     let file = File::open(filename)?;
@@ -75,12 +73,12 @@ fn read_xml(filename: &str) -> Result<Vec<Task>, Box<dyn std::error::Error>> {
 }
 
 fn main() {
-    let read_tasks = read_xml("sudo_task_list.xml")
-        .expect("Had trouble parsing tasks from xml file");
+    let read_tasks =
+        read_xml("sudo_task_list.xml").expect("Had trouble parsing tasks from xml file");
 
     //Basic usage with TaskManager
-    unsafe { 
-        TASK_MANAGER.set_tasks(read_tasks); 
+    unsafe {
+        TASK_MANAGER.set_tasks(read_tasks);
         for current_task in TASK_MANAGER.fetch_tasks() {
             println!("{:?}", current_task);
         }
@@ -95,4 +93,21 @@ fn main() {
         let new_task_list = TASK_MANAGER.fetch_tasks();
         println!("Read tasks with new task added: {:?}", new_task_list);
     }
+}
+
+#[cfg(test)]
+mod tests {
+    //Test read_xml functionality
+    #[test]
+    fn read_valid_task_data() {}
+    #[test]
+    fn read_invalid_task_data() {}
+    #[test]
+    fn read_empty_xml_file() {}
+
+    //test TASK_MANAGER functionality
+    #[test]
+    fn set_tasks_test() {}
+    #[test]
+    fn add_task_test() {}
 }
