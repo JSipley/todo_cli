@@ -128,10 +128,24 @@ mod tests {
         assert_eq!(result_tasks, expected_tasks);
     }
     #[test]
-    fn read_invalid_task_data() {}
-    #[test]
-    fn read_empty_xml_file() {}
+    fn read_invalid_task_data() {
+        let expected_tasks: Vec<Task> = vec![
+            Task {
+                description: " Example task one ".to_string(),
+                due_date: " 1/25/2023 ".to_string(),
+                important: " y ".to_string(),
+            }];
 
+        let filename = XML_TEST_FILE_PATH.to_owned() + "invalid_test_tasks.xml";
+        let result_tasks = read_xml(&filename).unwrap();
+
+        assert_eq!(expected_tasks, result_tasks);
+    }
+    #[test]
+    fn read_empty_xml_file() {
+        let filename = XML_TEST_FILE_PATH.to_owned() + "empty_file.xml";
+        assert!(read_xml(&filename).is_err());
+    }
     //test TASK_MANAGER functionality
     #[test]
     fn set_tasks_test() {}
