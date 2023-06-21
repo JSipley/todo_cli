@@ -169,6 +169,7 @@ mod tests {
         ];
 
         unsafe { 
+            //Test that all tasks will be fetched from TASK_MANAGER once tasks are set through set_tasks()
             TASK_MANAGER.set_tasks(test_tasks.clone());
             assert_eq!(TASK_MANAGER.fetch_tasks(), test_tasks);
 
@@ -178,6 +179,7 @@ mod tests {
                 due_date: String::from("6/20/2023"),
                 important: String::from("n"),
             };
+            //Test that all tests set and the one extra task added are received through fetch_tasks()
             test_tasks.push(new_task.clone());
             TASK_MANAGER.add_task(new_task);
 
