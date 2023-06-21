@@ -1,8 +1,9 @@
 use std::fs::File;
 use std::io::BufReader;
+use std::clone::Clone;
 use xml::reader::{EventReader, XmlEvent};
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Clone)]
 struct Task {
     description: String,
     due_date: String,
@@ -148,7 +149,39 @@ mod tests {
     }
     //test TASK_MANAGER functionality
     #[test]
-    fn set_tasks_test() {}
-    #[test]
-    fn add_task_test() {}
+    fn test_task_manager() {
+        let mut test_tasks: Vec<Task> = vec![
+            Task {
+                description: "Example task one".to_string(),
+                due_date: "1/25/2023".to_string(),
+                important: "y".to_string(),
+            },
+            Task {
+                description: "Example task two".to_string(),
+                due_date: "3/10/2023".to_string(),
+                important: "n".to_string(),
+            },
+            Task {
+                description: "Example task three".to_string(),
+                due_date: "5/31/2023".to_string(),
+                important: "n".to_string(),
+            },
+        ];
+
+        unsafe { 
+            TASK_MANAGER.set_tasks(test_tasks.clone());
+            assert_eq!(TASK_MANAGER.fetch_tasks(), test_tasks);
+
+            //Now add a task to task manager
+            let new_task = Task {
+                description: String::from("New task"),
+                due_date: String::from("6/20/2023"),
+                important: String::from("n"),
+            };
+            test_tasks.push(new_task.clone());
+            TASK_MANAGER.add_task(new_task);
+
+            assert_eq!(TASK_MANAGER.fetch_tasks(), test_tasks);
+        }
+    }
 }
