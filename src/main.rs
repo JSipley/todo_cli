@@ -1,6 +1,7 @@
+use std::clone::Clone;
+use std::error::Error;
 use std::fs::File;
 use std::io::BufReader;
-use std::clone::Clone;
 use xml::reader::{EventReader, XmlEvent};
 
 #[derive(Debug, PartialEq, Clone)]
@@ -30,7 +31,7 @@ impl TaskManager {
 
 static mut TASK_MANAGER: TaskManager = TaskManager { tasks: Vec::new() };
 
-fn read_xml(filename: &str) -> Result<Vec<Task>, Box<dyn std::error::Error>> {
+fn read_xml(filename: &str) -> Result<Vec<Task>, Box<dyn Error>> {
     let file = File::open(filename)?;
     let file = BufReader::new(file);
     let parser = EventReader::new(file);
@@ -73,27 +74,12 @@ fn read_xml(filename: &str) -> Result<Vec<Task>, Box<dyn std::error::Error>> {
     Ok(task_list)
 }
 
+fn write_xml(filename: &str, tasks: Vec<Task>) -> Result<(), Box<dyn Error>> {
+    Ok(())
+}
+
 fn main() {
-    let read_tasks =
-        read_xml("sudo_task_list.xml").expect("Had trouble parsing tasks from xml file");
-
-    //Basic usage with TaskManager
-    unsafe {
-        TASK_MANAGER.set_tasks(read_tasks);
-        for current_task in TASK_MANAGER.fetch_tasks() {
-            println!("{:?}", current_task);
-        }
-
-        let new_task = Task {
-            description: String::from("new task"),
-            due_date: String::from("1/1/2024"),
-            important: String::from("y"),
-        };
-        TASK_MANAGER.add_task(new_task);
-
-        let new_task_list = TASK_MANAGER.fetch_tasks();
-        println!("Read tasks with new task added: {:?}", new_task_list);
-    }
+    println!("Hello world!");
 }
 
 #[cfg(test)]
@@ -130,12 +116,11 @@ mod tests {
     }
     #[test]
     fn read_invalid_task_data() {
-        let expected_tasks: Vec<Task> = vec![
-            Task {
-                description: " Example task one ".to_string(),
-                due_date: " 1/25/2023 ".to_string(),
-                important: " y ".to_string(),
-            }];
+        let expected_tasks: Vec<Task> = vec![Task {
+            description: " Example task one ".to_string(),
+            due_date: " 1/25/2023 ".to_string(),
+            important: " y ".to_string(),
+        }];
 
         let filename = XML_TEST_FILE_PATH.to_owned() + "invalid_test_tasks.xml";
         let result_tasks = read_xml(&filename).unwrap();
@@ -168,7 +153,7 @@ mod tests {
             },
         ];
 
-        unsafe { 
+        unsafe {
             //Test that all tasks will be fetched from TASK_MANAGER once tasks are set through set_tasks()
             TASK_MANAGER.set_tasks(test_tasks.clone());
             assert_eq!(TASK_MANAGER.fetch_tasks(), test_tasks);
