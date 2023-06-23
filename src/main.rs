@@ -3,6 +3,7 @@ use std::error::Error;
 use std::fs::File;
 use std::io::BufReader;
 use xml::reader::{EventReader, XmlEvent};
+use xml::writer::{EmitterConfig, EventWriter};
 
 #[derive(Debug, PartialEq, Clone)]
 struct Task {
@@ -75,6 +76,11 @@ fn read_xml(filename: &str) -> Result<Vec<Task>, Box<dyn Error>> {
 }
 
 fn write_xml(filename: &str, tasks: Vec<Task>) -> Result<(), Box<dyn Error>> {
+    let mut file = File::create(filename)?;
+    let mut writer = EmitterConfig::new()
+        .perform_indent(true)
+        .create_writer(&mut file);
+
     Ok(())
 }
 
