@@ -3,7 +3,7 @@ use std::error::Error;
 use std::fs::File;
 use std::io::BufReader;
 use xml::reader::{EventReader, XmlEvent};
-use xml::writer::{EmitterConfig, EventWriter, XmlEvent as XmlEventWrite};
+use xml::writer::{EmitterConfig, XmlEvent as XmlWriteEvent};
 
 #[derive(Debug, PartialEq, Clone)]
 struct Task {
@@ -81,21 +81,37 @@ fn write_xml(filename: &str, tasks: Vec<Task>) -> Result<(), Box<dyn Error>> {
         .perform_indent(true)
         .create_writer(&mut file);
 
-    writer.write(XmlEventWrite::StartDocument {
+    writer.write(XmlWriteEvent::StartDocument {
         version: xml::common::XmlVersion::Version10,
         encoding: Some("UTF-8"),
         standalone: None,
     })?;
 
-    writer.write(XmlEventWrite::start_element("Task"))?;
-    writer.write(XmlEventWrite::end_element())?;
+    for task in tasks {
+        writer.write(XmlWriteEvent::start_element("Task"))?;
+
+        writer.write(XmlWriteEvent::start_element("Description"))?;
+        writer.write(XmlWriteEvent::characters(&task.description))?;
+        writer.write(XmlWriteEvent::end_element())?;
+
+        writer.write(XmlWriteEvent::start_element("Due_Date"))?;
+        writer.write(XmlWriteEvent::characters(&task.due_date))?;
+        writer.write(XmlWriteEvent::end_element())?;
+
+        writer.write(XmlWriteEvent::start_element("Important"))?;
+        writer.write(XmlWriteEvent::characters(&task.important))?;
+        writer.write(XmlWriteEvent::end_element())?;
+
+        writer.write(XmlWriteEvent::end_element())?;
+    }
 
     Ok(())
 }
 
 fn main() {
     println!("Testing of writer_xml function");
-    let _ = write_xml("test.xml", Vec::new());
+    let test_tasks: Vec<Task> = read_xml("sudo_task_list.xml").unwrap();
+    let _ = write_xml("test.xml", test_tasks);
 }
 
 #[cfg(test)]
