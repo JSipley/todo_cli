@@ -117,6 +117,7 @@ fn main() {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use std::io::Read;
 
     const XML_TEST_FILE_PATH: &str = "xml_test_files/";
 
@@ -146,6 +147,7 @@ mod tests {
 
         assert_eq!(result_tasks, expected_tasks);
     }
+
     #[test]
     fn read_invalid_task_data() {
         let expected_tasks: Vec<Task> = vec![Task {
@@ -159,10 +161,60 @@ mod tests {
 
         assert_eq!(expected_tasks, result_tasks);
     }
+
     #[test]
     fn read_empty_xml_file() {
         let filename = XML_TEST_FILE_PATH.to_owned() + "empty_file.xml";
         assert!(read_xml(&filename).is_err());
+    }
+
+    #[test]
+    fn test_write_xml() {
+        // Create a temporary file for testing
+        let filename = "test.xml";
+
+        // Define some sample tasks
+        let tasks = vec![
+            Task {
+                description: "Task 1".to_string(),
+                due_date: "2023-06-10".to_string(),
+                important: "n".to_string(),
+            },
+            Task {
+                description: "Task 2".to_string(),
+                due_date: "2023-06-15".to_string(),
+                important: "y".to_string(),
+            },
+        ];
+
+        // Invoke the write_xml function
+        let result = write_xml(filename, tasks);
+
+        // Assert that the function call succeeded
+        assert!(result.is_ok());
+
+        // Read the contents of the written file
+        let mut file = File::open(filename).unwrap();
+        let mut contents = String::new();
+        file.read_to_string(&mut contents).unwrap();
+
+        // Assert that the file contains the expected XML structure and data
+        let expected_xml = r#"<?xml version="1.0" encoding="UTF-8"?>
+<Task>
+  <Description>Task 1</Description>
+  <Due_Date>2023-06-10</Due_Date>
+  <Important>n</Important>
+</Task>
+<Task>
+  <Description>Task 2</Description>
+  <Due_Date>2023-06-15</Due_Date>
+  <Important>y</Important>
+</Task>"#;
+
+        assert_eq!(contents, expected_xml);
+
+        // Clean up the temporary file
+        std::fs::remove_file(filename).unwrap();
     }
     //test TASK_MANAGER functionality
     #[test]
