@@ -3,7 +3,7 @@ use std::error::Error;
 use std::fs::File;
 use std::io::BufReader;
 use xml::reader::{EventReader, XmlEvent};
-use xml::writer::{EmitterConfig, EventWriter};
+use xml::writer::{EmitterConfig, EventWriter, XmlEvent as XmlEventWrite};
 
 #[derive(Debug, PartialEq, Clone)]
 struct Task {
@@ -81,11 +81,21 @@ fn write_xml(filename: &str, tasks: Vec<Task>) -> Result<(), Box<dyn Error>> {
         .perform_indent(true)
         .create_writer(&mut file);
 
+    writer.write(XmlEventWrite::StartDocument {
+        version: xml::common::XmlVersion::Version10,
+        encoding: Some("UTF-8"),
+        standalone: None,
+    })?;
+
+    writer.write(XmlEventWrite::start_element("Task"))?;
+    writer.write(XmlEventWrite::end_element())?;
+
     Ok(())
 }
 
 fn main() {
-    println!("Hello world!");
+    println!("Testing of writer_xml function");
+    let _ = write_xml("test.xml", Vec::new());
 }
 
 #[cfg(test)]
