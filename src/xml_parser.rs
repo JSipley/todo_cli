@@ -64,17 +64,17 @@ pub fn write(filename: &str, tasks: Vec<Task>) -> Result<(), Box<dyn Error>> {
     for task in tasks {
         writer.write(XmlWriteEvent::start_element("Task"))?;
 
-        writer.write(XmlWriteEvent::start_element("Description"))?;
-        writer.write(XmlWriteEvent::characters(&task.description))?;
-        writer.write(XmlWriteEvent::end_element())?;
+        let mut write_field = | name: &str, data: &str | -> Result<(), Box<dyn Error>> {
+            writer.write(XmlWriteEvent::start_element(name))?;
+            writer.write(XmlWriteEvent::characters(data))?;
+            writer.write(XmlWriteEvent::end_element())?;
 
-        writer.write(XmlWriteEvent::start_element("Due_Date"))?;
-        writer.write(XmlWriteEvent::characters(&task.due_date))?;
-        writer.write(XmlWriteEvent::end_element())?;
+            Ok(())
+        };
 
-        writer.write(XmlWriteEvent::start_element("Important"))?;
-        writer.write(XmlWriteEvent::characters(&task.important))?;
-        writer.write(XmlWriteEvent::end_element())?;
+        write_field("Description", &task.description)?;
+        write_field("Due_Date", &task.due_date)?;
+        write_field("Important", &task.important)?;
 
         writer.write(XmlWriteEvent::end_element())?;
     }
