@@ -6,3 +6,11 @@ pub struct Task {
     pub due_date: String,
     pub important: String,
 }
+
+impl Task {
+    pub fn print(&self) {
+        println!("Description: {}", self.description);
+        println!("Due Date: {}", self.due_date);
+        println!("Important: {}", self.important);
+    }
+}

@@ -15,9 +15,20 @@ fn main() {
     let args: Vec<String> = env::args().collect();
     let user_command = &args[1];
 
+    {
+        let read_tasks = read("task_database.xml").unwrap();
+        unsafe {
+            TASK_MANAGER.set_tasks(read_tasks);
+        }
+    }
+
     if user_command == "new" {
         let new_task = create_new_task().unwrap();
         dbg!(new_task);
+    } else if user_command == "view" {
+        view_tasks();
+    } else {
+        eprintln!("Invalid arguments, try again");
     }
 }
 
@@ -39,4 +50,14 @@ fn create_new_task() -> Result<Task, Box<dyn Error>> {
         due_date: task_due_date.to_string(),
         important: important_task.to_string(),
     })
+}
+
+fn view_tasks() {
+    unsafe {
+        let tasks = TASK_MANAGER.fetch_tasks();
+        for task in tasks {
+            task.print();
+            println!();
+        }
+    }
 }
