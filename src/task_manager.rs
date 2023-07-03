@@ -1,6 +1,8 @@
 //task_manager.rs
 
 use crate::models::Task;
+use crate::xml_parser::write as write_to_xml;
+use crate::Error;
 
 pub struct TaskManager {
     pub tasks: Vec<Task>,
@@ -17,6 +19,11 @@ impl TaskManager {
 
     pub fn add_task(&mut self, task: Task) {
         self.tasks.push(task);
+    }
+
+    pub fn save_tasks(&self, filename: &str) -> Result<(), Box<dyn Error>> {
+        let _ = write_to_xml(filename, &self.tasks)?;
+        Ok(())
     }
 }
 

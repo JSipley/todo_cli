@@ -49,7 +49,7 @@ pub fn read(filename: &str) -> Result<Vec<Task>, Box<dyn Error>> {
     Ok(task_list)
 }
 
-pub fn write(filename: &str, tasks: Vec<Task>) -> Result<(), Box<dyn Error>> {
+pub fn write(filename: &str, tasks: &[Task]) -> Result<(), Box<dyn Error>> {
     let mut file = File::create(filename)?;
     let mut writer = EmitterConfig::new()
         .perform_indent(true)
@@ -156,7 +156,7 @@ mod tests {
         ];
 
         // Invoke the write_xml function
-        let result = write(filename, tasks);
+        let result = write(filename, &tasks);
 
         // Assert that the function call succeeded
         assert!(result.is_ok());
