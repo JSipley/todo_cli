@@ -69,7 +69,7 @@ fn view_tasks(show_task_id: bool) {
             if show_task_id {
                 println!("Task ID: {}", i);
             }
-            println!("{}", tasks[i]);
+            println!("{}\n", tasks[i]);
         }
     }
 }
