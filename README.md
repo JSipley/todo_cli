@@ -128,7 +128,3 @@ When contributing code, please follow the existing code style and ensure that yo
 ## License
 
 This project is licensed under the [MIT License](LICENSE).
-
-## Acknowledgments
-
-Special thanks to [Your Name] for the inspiration and support throughout the development of this project.
