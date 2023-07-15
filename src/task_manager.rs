@@ -25,6 +25,10 @@ impl TaskManager {
         let _ = write_to_xml(filename, &self.tasks)?;
         Ok(())
     }
+
+    pub fn remove_task(&mut self, task_index: usize) {
+        self.tasks.remove(task_index);
+    }
 }
 
 #[cfg(test)]

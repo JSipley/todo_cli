@@ -25,7 +25,9 @@ fn main() {
         let new_task = create_new_task().unwrap();
         unsafe { TASK_MANAGER.add_task(new_task) };
     } else if user_command == "view" {
-        view_tasks();
+        view_tasks(false);
+    } else if user_command == "done" {
+        complete_task();
     } else {
         eprintln!("Invalid arguments, try again");
     }
@@ -60,12 +62,30 @@ fn read_trimmed_line() -> std::io::Result<String> {
     Ok(input.trim().to_string())
 }
 
-fn view_tasks() {
+fn view_tasks(show_task_id: bool) {
     unsafe {
         let tasks = TASK_MANAGER.fetch_tasks();
-        for task in tasks {
-            task.print();
+        for i in 0..tasks.len(){
+            if show_task_id {
+                println!("Task ID: {}", i);
+            }
+            tasks[i].print();
             println!();
         }
     }
+}
+
+fn complete_task() {
+    println!("Listed below are your tasks:");
+    //Call view_tasks with the addition of displaying each task with an ID number
+    view_tasks(true);
+    println!("Enter the task ID of the finished task: ");
+    let task_id: usize = match read_trimmed_line().unwrap().trim().parse::<usize>() {
+        Ok(id) => id,
+        Err(_) => {
+            println!("Invalid input. Please enter a valid task ID.");
+            return; // Early return if parsing fails
+        }
+    };
+    unsafe { TASK_MANAGER.remove_task(task_id); }
 }
