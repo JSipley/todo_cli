@@ -22,7 +22,7 @@ impl TaskManager {
     }
 
     pub fn save_tasks(&self, filename: &str) -> Result<(), Box<dyn Error>> {
-        let _ = write_to_xml(filename, &self.tasks)?;
+        write_to_xml(filename, &self.tasks)?;
         Ok(())
     }
 
