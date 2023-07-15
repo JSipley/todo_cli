@@ -1,4 +1,5 @@
 // models.rs contains all data models used in application
+use std::fmt;
 
 #[derive(Debug, PartialEq, Clone)]
 pub struct Task {
@@ -7,10 +8,9 @@ pub struct Task {
     pub important: String,
 }
 
-impl Task {
-    pub fn print(&self) {
-        println!("Description: {}", self.description);
-        println!("Due Date: {}", self.due_date);
-        println!("Important: {}", self.important);
+impl fmt::Display for Task{
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "Description: {}\nDue Date: {}\nImportant: {}", 
+               self.description, self.due_date, self.important)
     }
 }
