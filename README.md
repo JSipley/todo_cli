@@ -79,11 +79,11 @@ This is what viewing tasks should look like.
 ```bash
 Description: Task 1
 Due Date: 7/15/2023
-Important: n
+Important: No
 
 Description: Task 2
 Due Date: 8/16/2023
-Important: n
+Important: No
 ```
 
 3. Marking a task as completed:
@@ -97,27 +97,31 @@ You will be prompted to select the task ID to mark as completed.
 ```bash
 Listed below are your tasks:
 Task ID: 0
-Description:  Example task one
-Due Date:  1/25/2023
-Important:  y
+Description: Example task one
+Due Date: 1/25/2023
+Important: Yes
+
 Task ID: 1
-Description:  Example task two
-Due Date:  3/10/2023
-Important:  n
+Description: Example task two
+Due Date: 3/10/2023
+Important: No
+
 Task ID: 2
-Description:  Example task three
-Due Date:  5/31/2023
-Important:  n
+Description: Example task three
+Due Date: 5/31/2023
+Important: No
+
 Task ID: 3
 Description: Task 1
 Due Date: 7/15/2023
-Important: n
+Important: No
+
 Enter the task ID of the finished task:
 ```
 
 ## File Storage
 
-The to-do list data is stored in an XML file named `task_database.xml` in the project directory. When you add or complete tasks, the changes will be saved to this file automatically. In the current state of the application, it's important to run todo_cli from the directory that has `task_database.xml`.
+The to-do list data is stored in an XML file named `task_database.xml` in the project directory. When you add or complete tasks, the changes will be saved to this file automatically. If the file doesn't exist yet, running the `new` command will create it. For `view` and `done`, the file must be present. Run todo_cli from the directory where you want `task_database.xml` to live.
 
 ## Contributing
 
