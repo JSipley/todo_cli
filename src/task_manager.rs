@@ -1,14 +1,16 @@
-//task_manager.rs
-
 use crate::models::Task;
 use crate::xml_parser::write as write_to_xml;
-use crate::Error;
+use std::error::Error;
 
 pub struct TaskManager {
-    pub tasks: Vec<Task>,
+    tasks: Vec<Task>,
 }
 
 impl TaskManager {
+    pub fn new() -> Self {
+        TaskManager { tasks: Vec::new() }
+    }
+
     pub fn set_tasks(&mut self, new_tasks: Vec<Task>) {
         self.tasks = new_tasks;
     }
@@ -26,8 +28,12 @@ impl TaskManager {
         Ok(())
     }
 
-    pub fn remove_task(&mut self, task_index: usize) {
-        self.tasks.remove(task_index);
+    pub fn remove_task(&mut self, task_index: usize) -> Option<Task> {
+        if task_index < self.tasks.len() {
+            Some(self.tasks.remove(task_index))
+        } else {
+            None
+        }
     }
 }
 
@@ -35,44 +41,74 @@ impl TaskManager {
 mod tests {
     use super::*;
 
-    static mut TASK_MANAGER: TaskManager = TaskManager { tasks: Vec::new() };
-
-    #[test]
-    fn test_task_manager() {
-        let mut test_tasks: Vec<Task> = vec![
+    fn sample_tasks() -> Vec<Task> {
+        vec![
             Task {
                 description: "Example task one".to_string(),
                 due_date: "1/25/2023".to_string(),
-                important: "y".to_string(),
+                important: true,
             },
             Task {
                 description: "Example task two".to_string(),
                 due_date: "3/10/2023".to_string(),
-                important: "n".to_string(),
+                important: false,
             },
             Task {
                 description: "Example task three".to_string(),
                 due_date: "5/31/2023".to_string(),
-                important: "n".to_string(),
+                important: false,
             },
-        ];
+        ]
+    }
 
-        unsafe {
-            //Test that all tasks will be fetched from TASK_MANAGER once tasks are set through set_tasks()
-            TASK_MANAGER.set_tasks(test_tasks.clone());
-            assert_eq!(TASK_MANAGER.fetch_tasks(), test_tasks);
+    #[test]
+    fn test_new_creates_empty_manager() {
+        let manager = TaskManager::new();
+        assert!(manager.fetch_tasks().is_empty());
+    }
 
-            //Now add a task to task manager
-            let new_task = Task {
-                description: String::from("New task"),
-                due_date: String::from("6/20/2023"),
-                important: String::from("n"),
-            };
-            //Test that all tests set and the one extra task added are received through fetch_tasks()
-            test_tasks.push(new_task.clone());
-            TASK_MANAGER.add_task(new_task);
+    #[test]
+    fn test_set_and_fetch_tasks() {
+        let mut manager = TaskManager::new();
+        let tasks = sample_tasks();
+        manager.set_tasks(tasks.clone());
+        assert_eq!(manager.fetch_tasks(), tasks);
+    }
 
-            assert_eq!(TASK_MANAGER.fetch_tasks(), test_tasks);
-        }
+    #[test]
+    fn test_add_task() {
+        let mut manager = TaskManager::new();
+        manager.set_tasks(sample_tasks());
+
+        let new_task = Task {
+            description: "New task".to_string(),
+            due_date: "6/20/2023".to_string(),
+            important: false,
+        };
+        manager.add_task(new_task.clone());
+
+        assert_eq!(manager.fetch_tasks().len(), 4);
+        assert_eq!(manager.fetch_tasks().last().unwrap(), &new_task);
+    }
+
+    #[test]
+    fn test_remove_task_valid_index() {
+        let mut manager = TaskManager::new();
+        manager.set_tasks(sample_tasks());
+
+        let removed = manager.remove_task(1);
+        assert!(removed.is_some());
+        assert_eq!(removed.unwrap().description, "Example task two");
+        assert_eq!(manager.fetch_tasks().len(), 2);
+    }
+
+    #[test]
+    fn test_remove_task_out_of_bounds() {
+        let mut manager = TaskManager::new();
+        manager.set_tasks(sample_tasks());
+
+        let removed = manager.remove_task(10);
+        assert!(removed.is_none());
+        assert_eq!(manager.fetch_tasks().len(), 3);
     }
 }

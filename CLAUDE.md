@@ -14,11 +14,11 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 Rust CLI app for managing a to-do list with XML-based persistence. Single crate, no workspaces.
 
 **Modules:**
-- `main.rs` — CLI entry point, parses args (`new`/`view`/`done`), orchestrates user interaction via stdin. Uses a `static mut TaskManager` global.
-- `models.rs` — `Task` struct (description, due_date, important as Strings). Implements `Display`.
-- `task_manager.rs` — `TaskManager` holds a `Vec<Task>`, provides CRUD operations and delegates saving to xml_parser.
-- `xml_parser.rs` — Reads/writes tasks from/to XML using the `xml-rs` crate. XML elements: `<Task>` containing `<Description>`, `<Due_Date>`, `<Important>`.
+- `main.rs` — CLI entry point, parses args (`new`/`view`/`done`) via `match`, orchestrates user interaction via stdin. Creates a local `TaskManager` and passes it by reference to helper functions.
+- `models.rs` — `Task` struct (description, due_date as Strings, important as bool). Implements `Display`.
+- `task_manager.rs` — `TaskManager` holds a private `Vec<Task>`, provides CRUD operations (`new()`, `add_task()`, `fetch_tasks()`, `remove_task()` with bounds checking) and delegates saving to xml_parser.
+- `xml_parser.rs` — Reads/writes tasks from/to XML using the `xml-rs` crate. XML elements: `<Task>` containing `<Description>`, `<Due_Date>`, `<Important>`. Parsing tracks the current element name to assign fields correctly regardless of order. Reads `"true"`/`"y"` as important, writes `"true"`/`"false"`.
 
-**Data flow:** On startup, `task_database.xml` is read into the global `TaskManager`. After the user's command executes, all tasks are written back to the same file. The app must be run from the directory containing `task_database.xml`.
+**Data flow:** On startup, `task_database.xml` is read into a local `TaskManager`. After the user's command executes, all tasks are written back to the same file. If the file doesn't exist and the command is `new`, the app proceeds with an empty task list.
 
-**Test fixtures:** XML test files live in `xml_test_files/`.
+**Test fixtures:** XML test files live in `xml_test_files/`. Write tests use temp directories.
