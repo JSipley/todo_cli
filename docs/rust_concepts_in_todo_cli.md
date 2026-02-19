@@ -1,5 +1,7 @@
 # Rust Concepts in todo_cli
 
+> **Note:** This document was generated from the codebase at commit [`348c375`](https://github.com/siple/todo_cli/commit/348c375). Line number references and code examples reflect the source at that point in time.
+
 A guide to the key Rust ideas and syntax found in this project, with comparisons to C# and C++ where applicable.
 
 ---
