@@ -60,7 +60,7 @@ pub struct Task {
 impl fmt::Display for Task {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         let sep = "─".repeat(40);
-        write!(f, "{}\n\n", sep)?;
+        write!(f, "{}\n", sep)?;
         if self.priority == Priority::None {
             writeln!(f, "{}", self.description)?;
         } else {
@@ -70,7 +70,7 @@ impl fmt::Display for Task {
             writeln!(f, "{}", self.notes)?;
         }
         writeln!(f, "{}", self.due_date)?;
-        write!(f, "\n{}", sep)
+        write!(f, "{}", sep)
     }
 }
 

@@ -264,6 +264,8 @@ fn edit_task(manager: &mut TaskManager, id_arg: Option<&str>) {
         task.due_date = new_due_date;
         task.priority = new_priority;
         task.notes = new_notes;
+
+        println!("Task[{}] updated:\n{}", task.id, task);
     }
 }
 
