@@ -259,8 +259,6 @@ fn edit_task(manager: &mut TaskManager, id_arg: Option<&str>) {
         input
     };
 
-    println!("ID: {} (cannot be changed)", current.id);
-
     if let Some(task) = manager.find_task_by_id_mut(&id) {
         task.description = new_description;
         task.due_date = new_due_date;
