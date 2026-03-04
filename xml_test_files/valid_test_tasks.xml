@@ -1,16 +1,22 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <Task>
+  <ID>1A</ID>
   <Description>Example task one</Description>
   <Due_Date>1/25/2023</Due_Date>
-  <Important>y</Important>
+  <Priority>ASAP</Priority>
+  <Notes>Some notes here</Notes>
 </Task>
 <Task>
+  <ID>2B</ID>
   <Description>Example task two</Description>
   <Due_Date>3/10/2023</Due_Date>
-  <Important>n</Important>
+  <Priority>Medium</Priority>
+  <Notes/>
 </Task>
 <Task>
+  <ID>3C</ID>
   <Description>Example task three</Description>
   <Due_Date>5/31/2023</Due_Date>
-  <Important>n</Important>
+  <Priority>None</Priority>
+  <Notes/>
 </Task>

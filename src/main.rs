@@ -2,89 +2,347 @@ mod models;
 mod task_manager;
 mod xml_parser;
 
-use crate::models::Task;
-use std::{env, error::Error, io::stdin};
-use task_manager::TaskManager;
-use xml_parser::read as read_from_xml;
-
-static mut TASK_MANAGER: TaskManager = TaskManager { tasks: Vec::new() };
+use crate::models::{Priority, Task};
+use std::io::stdin;
+use std::process;
+use task_manager::{generate_unique_id, TaskManager};
 
 fn main() {
-    let args: Vec<String> = env::args().collect();
-    let user_command = &args[1];
+    let args: Vec<String> = std::env::args().collect();
     let filename = "task_database.xml";
 
-    {
-        let read_tasks = read_from_xml(filename).unwrap();
-        unsafe {
-            TASK_MANAGER.set_tasks(read_tasks);
+    let Some(command) = args.get(1) else {
+        eprintln!("Usage: todo_cli <new|view|done|edit|help>");
+        process::exit(1);
+    };
+
+    let mut manager = TaskManager::new();
+    let mut ids_were_missing = false;
+
+    match xml_parser::read(filename) {
+        Ok(mut tasks) => {
+            ids_were_missing = tasks.iter().any(|t| t.id.is_empty());
+            if let Err(e) = assign_missing_ids(&mut tasks) {
+                eprintln!("Error assigning task IDs: {e}");
+                process::exit(1);
+            }
+            manager.set_tasks(tasks);
+        }
+        Err(e) => {
+            if command != "new" {
+                eprintln!("Could not read {filename}: {e}");
+                process::exit(1);
+            }
         }
     }
 
-    if user_command == "new" {
-        let new_task = create_new_task().unwrap();
-        unsafe { TASK_MANAGER.add_task(new_task) };
-    } else if user_command == "view" {
-        view_tasks(false);
-    } else if user_command == "done" {
-        complete_task();
+    match command.as_str() {
+        "new" => {
+            if let Err(e) = create_new_task(&mut manager) {
+                eprintln!("Error creating task: {e}");
+                process::exit(1);
+            }
+        }
+        "view" => view_tasks(manager.fetch_tasks()),
+        "done" => complete_task(&mut manager, args.get(2).map(String::as_str)),
+        "edit" => edit_task(&mut manager, args.get(2).map(String::as_str)),
+        "help" | _ => print_help(),
+    }
+
+    let should_save = ids_were_missing || matches!(command.as_str(), "new" | "done" | "edit");
+    if should_save {
+        if let Err(e) = manager.save_tasks(filename) {
+            eprintln!("Error saving tasks: {e}");
+            process::exit(1);
+        }
+    }
+}
+
+fn assign_missing_ids(tasks: &mut Vec<Task>) -> Result<(), String> {
+    let mut used_ids: std::collections::HashSet<String> = tasks
+        .iter()
+        .filter(|t| !t.id.is_empty())
+        .map(|t| t.id.clone())
+        .collect();
+
+    for task in tasks.iter_mut() {
+        if task.id.is_empty() {
+            let existing: Vec<&str> = used_ids.iter().map(String::as_str).collect();
+            let new_id = generate_unique_id(&existing)?;
+            used_ids.insert(new_id.clone());
+            task.id = new_id;
+        }
+    }
+    Ok(())
+}
+
+fn parse_due_date(input: &str) -> Result<String, ()> {
+    let normalized = if input.len() == 8 && input.chars().all(|c| c.is_ascii_digit()) {
+        format!("{}/{}/{}", &input[0..2], &input[2..4], &input[4..8])
     } else {
-        eprintln!("Invalid arguments, try again");
+        input.replace(['-', '.', ' '], "/")
+    };
+
+    let parts: Vec<&str> = normalized.split('/').collect();
+    if parts.len() != 3 {
+        return Err(());
     }
 
-    //Once all user operations are done, write tasks to file
-    unsafe {
-        let _ = TASK_MANAGER.save_tasks(filename);
+    // Zero-pad single-digit month/day; expand 2-digit year to 4-digit
+    fn pad_two(s: &str) -> Result<String, ()> {
+        match s.len() {
+            1 => Ok(format!("0{}", s)),
+            2 => Ok(s.to_string()),
+            _ => Err(()),
+        }
     }
+    let month_str = pad_two(parts[0])?;
+    let day_str = pad_two(parts[1])?;
+    let year_str = match parts[2].len() {
+        2 => format!("20{}", parts[2]),
+        4 => parts[2].to_string(),
+        _ => return Err(()),
+    };
+
+    let month: u32 = month_str.parse().map_err(|_| ())?;
+    let day: u32 = day_str.parse().map_err(|_| ())?;
+
+    if !(1..=12).contains(&month) || !(1..=31).contains(&day) {
+        return Err(());
+    }
+
+    Ok(format!("{}/{}/{}", month_str, day_str, year_str))
 }
 
-fn create_new_task() -> Result<Task, Box<dyn Error>> {
-    println!("Enter task description: ");
-    let task_description = read_trimmed_line().unwrap();
-
-    println!("Enter task due date: ");
-    let task_due_date = read_trimmed_line().unwrap();
-
-    println!("Is this task important? (y/n): ");
-    let important_task = read_trimmed_line().unwrap();
-
-    Ok(Task {
-        description: task_description.to_string(),
-        due_date: task_due_date.to_string(),
-        important: important_task.to_string(),
-    })
-}
-
-//Trim the newline ('\n') character off user input
 fn read_trimmed_line() -> std::io::Result<String> {
     let mut input = String::new();
     stdin().read_line(&mut input)?;
     Ok(input.trim().to_string())
 }
 
-fn view_tasks(show_task_id: bool) {
-    unsafe {
-        let tasks = TASK_MANAGER.fetch_tasks();
-        for i in 0..tasks.len(){
-            if show_task_id {
-                println!("Task ID: {}", i);
-            }
-            println!("{}\n", tasks[i]);
-        }
+fn view_tasks(tasks: &[Task]) {
+    if tasks.is_empty() {
+        println!("No tasks found.");
+        return;
+    }
+    for task in tasks {
+        println!("{}", task);
     }
 }
 
-fn complete_task() {
-    println!("Listed below are your tasks:");
-    //Call view_tasks with the addition of displaying each task with an ID number
-    view_tasks(true);
-    println!("Enter the task ID of the finished task: ");
-    let task_id: usize = match read_trimmed_line().unwrap().trim().parse::<usize>() {
-        Ok(id) => id,
-        Err(_) => {
-            println!("Invalid input. Please enter a valid task ID.");
-            return; // Early return if parsing fails
+fn print_tasks_with_ids(tasks: &[Task]) {
+    for task in tasks {
+        println!("ID: {}", task.id);
+        println!("{}", task);
+    }
+}
+
+fn create_new_task(manager: &mut TaskManager) -> Result<(), String> {
+    println!("Enter task description: ");
+    let description = read_trimmed_line().map_err(|e| e.to_string())?;
+
+    let due_date = loop {
+        println!("Enter task due date (MM/DD/YYYY): ");
+        let input = read_trimmed_line().map_err(|e| e.to_string())?;
+        match parse_due_date(&input) {
+            Ok(date) => break date,
+            Err(()) => println!("Invalid date. Please use MM/DD/YYYY format."),
         }
     };
-    unsafe { TASK_MANAGER.remove_task(task_id); }
+
+    println!("Select a priority:");
+    println!("1. ASAP");
+    println!("2. Important");
+    println!("3. Medium");
+    println!("4. Minor");
+    println!("5. None");
+
+    let priority = loop {
+        let input = read_trimmed_line().map_err(|e| e.to_string())?;
+        if input.is_empty() {
+            break Priority::None;
+        }
+        match input.parse::<u8>() {
+            Ok(n @ 1..=5) => break Priority::from_menu_number(n),
+            _ => println!("Please enter a number 1-5 or press Enter for None."),
+        }
+    };
+
+    println!("Enter notes (optional): ");
+    let notes = read_trimmed_line().map_err(|e| e.to_string())?;
+
+    let existing_ids: Vec<&str> = manager.fetch_tasks().iter().map(|t| t.id.as_str()).collect();
+    let id = generate_unique_id(&existing_ids)?;
+
+    manager.add_task(Task {
+        id,
+        description,
+        due_date,
+        priority,
+        notes,
+    });
+
+    Ok(())
+}
+
+fn complete_task(manager: &mut TaskManager, id_arg: Option<&str>) {
+    let id = if let Some(id) = id_arg {
+        id.to_uppercase()
+    } else {
+        let tasks = manager.fetch_tasks();
+        if tasks.is_empty() {
+            println!("No tasks to complete.");
+            return;
+        }
+        print_tasks_with_ids(tasks);
+        println!("Enter the task ID of the finished task: ");
+        match read_trimmed_line() {
+            Ok(s) => s.to_uppercase(),
+            Err(e) => {
+                eprintln!("Error reading input: {e}");
+                return;
+            }
+        }
+    };
+
+    if let Some(task) = manager.remove_task_by_id(&id) {
+        println!("Completed: {}", task.description);
+    } else {
+        println!("Task ID {id} not found.");
+        print_tasks_with_ids(manager.fetch_tasks());
+    }
+}
+
+fn edit_task(manager: &mut TaskManager, id_arg: Option<&str>) {
+    let id = match id_arg {
+        None => {
+            if manager.fetch_tasks().is_empty() {
+                println!("No tasks to edit.");
+            } else {
+                print_tasks_with_ids(manager.fetch_tasks());
+            }
+            return;
+        }
+        Some(id) => id.to_uppercase(),
+    };
+
+    let current = match manager.find_task_by_id(&id) {
+        Some(task) => task.clone(),
+        None => {
+            println!("Task ID {id} not found.");
+            if !manager.fetch_tasks().is_empty() {
+                print_tasks_with_ids(manager.fetch_tasks());
+            }
+            return;
+        }
+    };
+
+    println!("Description [{}]: ", current.description);
+    let input = read_trimmed_line().unwrap_or_default();
+    let new_description = if input.is_empty() {
+        current.description.clone()
+    } else {
+        input
+    };
+
+    let new_due_date = loop {
+        println!("Due date [{}]: ", current.due_date);
+        let input = read_trimmed_line().unwrap_or_default();
+        if input.is_empty() {
+            break current.due_date.clone();
+        }
+        match parse_due_date(&input) {
+            Ok(date) => break date,
+            Err(()) => println!("Invalid date. Please use MM/DD/YYYY format."),
+        }
+    };
+
+    let new_priority = loop {
+        println!("Priority [{}]:", current.priority);
+        println!("  1. ASAP\n  2. Important\n  3. Medium\n  4. Minor\n  5. None");
+        println!("Enter 1-5 or press Enter to keep current: ");
+        let input = read_trimmed_line().unwrap_or_default();
+        if input.is_empty() {
+            break current.priority.clone();
+        }
+        match input.parse::<u8>() {
+            Ok(n @ 1..=5) => break Priority::from_menu_number(n),
+            _ => println!("Please enter a number 1-5 or press Enter to keep current."),
+        }
+    };
+
+    println!("Notes [{}]: ", current.notes);
+    let input = read_trimmed_line().unwrap_or_default();
+    let new_notes = if input.is_empty() {
+        current.notes.clone()
+    } else {
+        input
+    };
+
+    if let Some(task) = manager.find_task_by_id_mut(&id) {
+        task.description = new_description;
+        task.due_date = new_due_date;
+        task.priority = new_priority;
+        task.notes = new_notes;
+
+        println!("Task[{}] updated:\n{}", task.id, task);
+    }
+}
+
+fn print_help() {
+    println!("New:  Create a new task");
+    println!("Edit: Modify an existing task");
+    println!("Done: Mark a task as complete");
+    println!("View: Display all tasks");
+    println!("Help: Show this help message");
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_parse_due_date_valid() {
+        assert_eq!(parse_due_date("01/06/2026"), Ok("01/06/2026".to_string()));
+    }
+
+    #[test]
+    fn test_parse_due_date_dash_delimited() {
+        assert_eq!(parse_due_date("01-06-2026"), Ok("01/06/2026".to_string()));
+    }
+
+    #[test]
+    fn test_parse_due_date_eight_digit() {
+        assert_eq!(parse_due_date("01062026"), Ok("01/06/2026".to_string()));
+    }
+
+    #[test]
+    fn test_parse_due_date_invalid_month() {
+        assert_eq!(parse_due_date("13/06/2026"), Err(()));
+    }
+
+    #[test]
+    fn test_parse_due_date_invalid_day() {
+        assert_eq!(parse_due_date("01/32/2026"), Err(()));
+    }
+
+    #[test]
+    fn test_parse_due_date_short_digits() {
+        assert_eq!(parse_due_date("0106202"), Err(()));
+    }
+
+    #[test]
+    fn test_parse_due_date_single_digit_parts() {
+        assert_eq!(parse_due_date("1/1/2026"), Ok("01/01/2026".to_string()));
+    }
+
+    #[test]
+    fn test_parse_due_date_two_digit_year() {
+        assert_eq!(parse_due_date("01/06/26"), Ok("01/06/2026".to_string()));
+    }
+
+    #[test]
+    fn test_parse_due_date_single_digit_and_two_digit_year() {
+        assert_eq!(parse_due_date("1/1/26"), Ok("01/01/2026".to_string()));
+    }
 }
