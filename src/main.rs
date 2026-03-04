@@ -80,18 +80,35 @@ fn parse_due_date(input: &str) -> Result<String, ()> {
     };
 
     let parts: Vec<&str> = normalized.split('/').collect();
-    if parts.len() != 3 || parts[0].len() != 2 || parts[1].len() != 2 || parts[2].len() != 4 {
+    if parts.len() != 3 {
         return Err(());
     }
 
-    let month: u32 = parts[0].parse().map_err(|_| ())?;
-    let day: u32 = parts[1].parse().map_err(|_| ())?;
+    // Zero-pad single-digit month/day; expand 2-digit year to 4-digit
+    let month_str = match parts[0].len() {
+        1 => format!("0{}", parts[0]),
+        2 => parts[0].to_string(),
+        _ => return Err(()),
+    };
+    let day_str = match parts[1].len() {
+        1 => format!("0{}", parts[1]),
+        2 => parts[1].to_string(),
+        _ => return Err(()),
+    };
+    let year_str = match parts[2].len() {
+        2 => format!("20{}", parts[2]),
+        4 => parts[2].to_string(),
+        _ => return Err(()),
+    };
+
+    let month: u32 = month_str.parse().map_err(|_| ())?;
+    let day: u32 = day_str.parse().map_err(|_| ())?;
 
     if !(1..=12).contains(&month) || !(1..=31).contains(&day) {
         return Err(());
     }
 
-    Ok(normalized)
+    Ok(format!("{}/{}/{}", month_str, day_str, year_str))
 }
 
 fn read_trimmed_line() -> std::io::Result<String> {
@@ -309,5 +326,20 @@ mod tests {
     #[test]
     fn test_parse_due_date_short_digits() {
         assert_eq!(parse_due_date("0106202"), Err(()));
+    }
+
+    #[test]
+    fn test_parse_due_date_single_digit_parts() {
+        assert_eq!(parse_due_date("1/1/2026"), Ok("01/01/2026".to_string()));
+    }
+
+    #[test]
+    fn test_parse_due_date_two_digit_year() {
+        assert_eq!(parse_due_date("01/06/26"), Ok("01/06/2026".to_string()));
+    }
+
+    #[test]
+    fn test_parse_due_date_single_digit_and_two_digit_year() {
+        assert_eq!(parse_due_date("1/1/26"), Ok("01/01/2026".to_string()));
     }
 }
