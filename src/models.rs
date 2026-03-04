@@ -67,7 +67,7 @@ impl fmt::Display for Task {
             writeln!(f, "{} ({})", self.description, self.priority)?;
         }
         if !self.notes.is_empty() {
-            writeln!(f, "{}", self.notes)?;
+            writeln!(f, "\"{}\"", self.notes)?;
         }
         writeln!(f, "{}", self.due_date)?;
         write!(f, "{}", sep)

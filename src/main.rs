@@ -85,16 +85,15 @@ fn parse_due_date(input: &str) -> Result<String, ()> {
     }
 
     // Zero-pad single-digit month/day; expand 2-digit year to 4-digit
-    let month_str = match parts[0].len() {
-        1 => format!("0{}", parts[0]),
-        2 => parts[0].to_string(),
-        _ => return Err(()),
-    };
-    let day_str = match parts[1].len() {
-        1 => format!("0{}", parts[1]),
-        2 => parts[1].to_string(),
-        _ => return Err(()),
-    };
+    fn pad_two(s: &str) -> Result<String, ()> {
+        match s.len() {
+            1 => Ok(format!("0{}", s)),
+            2 => Ok(s.to_string()),
+            _ => Err(()),
+        }
+    }
+    let month_str = pad_two(parts[0])?;
+    let day_str = pad_two(parts[1])?;
     let year_str = match parts[2].len() {
         2 => format!("20{}", parts[2]),
         4 => parts[2].to_string(),
@@ -220,15 +219,16 @@ fn edit_task(manager: &mut TaskManager, id_arg: Option<&str>) {
         Some(id) => id.to_uppercase(),
     };
 
-    if manager.find_task_by_id(&id).is_none() {
-        println!("Task ID {id} not found.");
-        if !manager.fetch_tasks().is_empty() {
-            print_tasks_with_ids(manager.fetch_tasks());
+    let current = match manager.find_task_by_id(&id) {
+        Some(task) => task.clone(),
+        None => {
+            println!("Task ID {id} not found.");
+            if !manager.fetch_tasks().is_empty() {
+                print_tasks_with_ids(manager.fetch_tasks());
+            }
+            return;
         }
-        return;
-    }
-
-    let current = manager.find_task_by_id(&id).unwrap().clone();
+    };
 
     println!("Description [{}]: ", current.description);
     let input = read_trimmed_line().unwrap_or_default();
@@ -258,12 +258,8 @@ fn edit_task(manager: &mut TaskManager, id_arg: Option<&str>) {
         if input.is_empty() {
             break current.priority.clone();
         }
-        match input.as_str() {
-            "1" => break Priority::Asap,
-            "2" => break Priority::Important,
-            "3" => break Priority::Medium,
-            "4" => break Priority::Minor,
-            "5" => break Priority::None,
+        match input.parse::<u8>() {
+            Ok(n @ 1..=5) => break Priority::from_menu_number(n),
             _ => println!("Please enter a number 1-5 or press Enter to keep current."),
         }
     };
