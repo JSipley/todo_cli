@@ -46,7 +46,7 @@ pub fn read(filename: &str) -> Result<Vec<Task>, Box<dyn Error>> {
                         "ID" => task.id = text,
                         "Description" => task.description = text,
                         "Due_Date" => task.due_date = text,
-                        "Priority" => task.priority = text.parse().unwrap_or(Priority::None),
+                        "Priority" => task.priority = text.parse().unwrap(),
                         "Notes" => task.notes = text,
                         "Important" => {} // silently ignored (legacy migration)
                         _ => {}

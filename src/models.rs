@@ -1,3 +1,4 @@
+use std::convert::Infallible;
 use std::fmt;
 use std::str::FromStr;
 
@@ -23,16 +24,16 @@ impl fmt::Display for Priority {
 }
 
 impl FromStr for Priority {
-    type Err = ();
+    type Err = Infallible;
 
-    fn from_str(s: &str) -> Result<Self, Self::Err> {
-        match s.to_lowercase().as_str() {
-            "asap" => Ok(Priority::Asap),
-            "important" => Ok(Priority::Important),
-            "medium" => Ok(Priority::Medium),
-            "minor" => Ok(Priority::Minor),
-            _ => Ok(Priority::None),
-        }
+    fn from_str(s: &str) -> Result<Self, Infallible> {
+        Ok(match s.to_lowercase().as_str() {
+            "asap" => Priority::Asap,
+            "important" => Priority::Important,
+            "medium" => Priority::Medium,
+            "minor" => Priority::Minor,
+            _ => Priority::None,
+        })
     }
 }
 

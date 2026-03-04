@@ -38,11 +38,14 @@ impl TaskManager {
     }
 
     pub fn remove_task_by_id(&mut self, id: &str) -> Option<Task> {
-        if let Some(pos) = self.tasks.iter().position(|t| t.id == id) {
-            Some(self.tasks.remove(pos))
-        } else {
-            None
-        }
+        self.tasks.iter().position(|t| t.id == id)
+            .map(|pos| self.tasks.remove(pos))
+    }
+}
+
+impl Default for TaskManager {
+    fn default() -> Self {
+        Self::new()
     }
 }
 

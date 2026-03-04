@@ -17,9 +17,11 @@ fn main() {
     };
 
     let mut manager = TaskManager::new();
+    let mut ids_were_missing = false;
 
     match xml_parser::read(filename) {
         Ok(mut tasks) => {
+            ids_were_missing = tasks.iter().any(|t| t.id.is_empty());
             if let Err(e) = assign_missing_ids(&mut tasks) {
                 eprintln!("Error assigning task IDs: {e}");
                 process::exit(1);
@@ -44,13 +46,15 @@ fn main() {
         "view" => view_tasks(manager.fetch_tasks()),
         "done" => complete_task(&mut manager, args.get(2).map(String::as_str)),
         "edit" => edit_task(&mut manager, args.get(2).map(String::as_str)),
-        "help" => print_help(),
-        _ => print_help(),
+        "help" | _ => print_help(),
     }
 
-    if let Err(e) = manager.save_tasks(filename) {
-        eprintln!("Error saving tasks: {e}");
-        process::exit(1);
+    let should_save = ids_were_missing || matches!(command.as_str(), "new" | "done" | "edit");
+    if should_save {
+        if let Err(e) = manager.save_tasks(filename) {
+            eprintln!("Error saving tasks: {e}");
+            process::exit(1);
+        }
     }
 }
 
@@ -117,6 +121,10 @@ fn read_trimmed_line() -> std::io::Result<String> {
 }
 
 fn view_tasks(tasks: &[Task]) {
+    if tasks.is_empty() {
+        println!("No tasks found.");
+        return;
+    }
     for task in tasks {
         println!("{}", task);
     }
@@ -154,11 +162,8 @@ fn create_new_task(manager: &mut TaskManager) -> Result<(), String> {
         if input.is_empty() {
             break Priority::None;
         }
-        match input.as_str() {
-            "1" | "2" | "3" | "4" | "5" => {
-                let n: u8 = input.parse().unwrap();
-                break Priority::from_menu_number(n);
-            }
+        match input.parse::<u8>() {
+            Ok(n @ 1..=5) => break Priority::from_menu_number(n),
             _ => println!("Please enter a number 1-5 or press Enter for None."),
         }
     };
@@ -200,7 +205,9 @@ fn complete_task(manager: &mut TaskManager, id_arg: Option<&str>) {
         }
     };
 
-    if manager.remove_task_by_id(&id).is_none() {
+    if let Some(task) = manager.remove_task_by_id(&id) {
+        println!("Completed: {}", task.description);
+    } else {
         println!("Task ID {id} not found.");
         print_tasks_with_ids(manager.fetch_tasks());
     }
