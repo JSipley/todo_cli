@@ -1,12 +1,14 @@
 # Todo CLI (Command Line Interface)
 
-Todo CLI is a simple command-line tool that allows you to manage your to-do list right from the terminal. This Rust-based project provides an efficient and straightforward way to keep track of tasks, add new ones, mark them as completed, and remove them when done, all without leaving the command-line environment.
+Todo CLI is a simple command-line tool that allows you to manage your to-do list right from the terminal. This Rust-based project provides an efficient and straightforward way to keep track of tasks, add new ones, edit them, mark them as completed, and remove them when done, all without leaving the command-line environment.
 
 ## Features
 
-- Create tasks with a description, due date, and important marker.
-- View all tasks.
+- Create tasks with a description, due date, priority, and optional notes.
+- View all tasks with a clean formatted display.
+- Edit existing tasks in place.
 - Mark tasks as completed.
+- Tasks are identified by a unique 2-digit hex ID (e.g. `3D`).
 - Data is stored in an XML file for easy persistence.
 
 ## Prerequisites
@@ -44,10 +46,10 @@ To run the Todo CLI, open your terminal and navigate to the project directory (i
 ### Commands
 
 - `new`: Create a new task and add it to the to-do list.
-
-- `view`: View all tasks, both completed and incomplete.
-
-- `done`: Mark a task as completed.
+- `view`: View all tasks.
+- `done [ID]`: Mark a task as completed. Optionally pass the hex ID directly.
+- `edit [ID]`: Modify an existing task. Optionally pass the hex ID directly.
+- `help`: Show available commands.
 
 ### Examples
 
@@ -57,16 +59,25 @@ To run the Todo CLI, open your terminal and navigate to the project directory (i
 ./target/release/todo_cli new
 ```
 
-You will be prompted to enter the task description, due date, and whether it is important. Below is an example of creating a new task.
+You will be prompted for the task description, due date, priority, and optional notes.
 
-```bash
-Enter task description: 
-Task 1
-Enter task due date: 
-7/15/2023
-Is this task important? (y/n): 
-n
 ```
+Enter task description:
+Buy groceries
+Enter task due date (MM/DD/YYYY):
+1/15/2026
+Select a priority:
+1. ASAP
+2. Important
+3. Medium
+4. Minor
+5. None
+2
+Enter notes (optional):
+Don't forget milk
+```
+
+**Due date formats accepted:** `MM/DD/YYYY`, `M/D/YYYY`, `MM-DD-YYYY`, `MMDDYYYY`, `MM/DD/YY` (year expanded to `20YY`), and combinations thereof.
 
 2. Viewing all tasks:
 
@@ -74,16 +85,16 @@ n
 ./target/release/todo_cli view
 ```
 
-This is what viewing tasks should look like.
-
-```bash
-Description: Task 1
-Due Date: 7/15/2023
-Important: No
-
-Description: Task 2
-Due Date: 8/16/2023
-Important: No
+```
+────────────────────────────────────────
+Buy groceries (Important)
+Don't forget milk
+01/15/2026
+────────────────────────────────────────
+────────────────────────────────────────
+Walk the dog
+01/16/2026
+────────────────────────────────────────
 ```
 
 3. Marking a task as completed:
@@ -92,36 +103,74 @@ Important: No
 ./target/release/todo_cli done
 ```
 
-You will be prompted to select the task ID to mark as completed.
+If no ID is provided, your tasks are listed with their hex IDs and you are prompted to enter one:
 
-```bash
-Listed below are your tasks:
-Task ID: 0
-Description: Example task one
-Due Date: 1/25/2023
-Important: Yes
-
-Task ID: 1
-Description: Example task two
-Due Date: 3/10/2023
-Important: No
-
-Task ID: 2
-Description: Example task three
-Due Date: 5/31/2023
-Important: No
-
-Task ID: 3
-Description: Task 1
-Due Date: 7/15/2023
-Important: No
+```
+ID: 3D
+────────────────────────────────────────
+Buy groceries (Important)
+Don't forget milk
+01/15/2026
+────────────────────────────────────────
 
 Enter the task ID of the finished task:
+3D
+```
+
+You can also pass the ID directly:
+
+```bash
+./target/release/todo_cli done 3D
+```
+
+4. Editing a task:
+
+```bash
+./target/release/todo_cli edit 3D
+```
+
+You are prompted for each field. Press Enter to keep the current value.
+
+```
+Description [Buy groceries]:
+
+Due date [01/15/2026]:
+1/20/2026
+Priority [Important]:
+  1. ASAP  
+  2. Important  
+  3. Medium  
+  4. Minor  
+  5. None
+Enter 1-5 or press Enter to keep current:
+3
+Notes [Don't forget milk]:
+
+Task [3D] updated!:
+────────────────────────────────────────
+Buy groceries (Medium)
+Test Note
+1/20/2026
+────────────────────────────────────────
+```
+
+5. Showing help:
+
+```bash
+./target/release/todo_cli help
+```
+
+```
+New:  Create a new task
+Edit: Modify an existing task
+Done: Mark a task as complete
+View: Display all tasks
+Help: Show this help message
 ```
 
 ## File Storage
 
-The to-do list data is stored in an XML file named `task_database.xml` in the project directory. When you add or complete tasks, the changes will be saved to this file automatically. If the file doesn't exist yet, running the `new` command will create it. For `view` and `done`, the file must be present. Run todo_cli from the directory where you want `task_database.xml` to live.
+The to-do list data is stored in an XML file named `task_database.xml` in the project directory. When you add, edit, or complete tasks, the changes will be saved to this file automatically. If the file doesn't exist yet, running the `new` command will create it. For `view`, `done`, and `edit`, the file must be present. Run todo_cli from the directory where you want `task_database.xml` to live.
 
 ## Contributing
 
