@@ -23,13 +23,13 @@ Todo CLI is a simple command-line tool that allows you to manage your to-do list
 git clone https://github.com/JSipley/todo_cli.git
 ```
 
-2. Change into the project directory:
+1. Change into the project directory:
 
 ```bash
 cd todo_cli
 ```
 
-3. Build the project using Cargo:
+1. Build the project using Cargo:
 
 ```bash
 cargo build --release
@@ -61,7 +61,7 @@ To run the Todo CLI, open your terminal and navigate to the project directory (i
 
 You will be prompted for the task description, due date, priority, and optional notes.
 
-```
+```text
 Enter task description:
 Buy groceries
 Enter task due date (MM/DD/YYYY):
@@ -79,13 +79,13 @@ Don't forget milk
 
 **Due date formats accepted:** `MM/DD/YYYY`, `M/D/YYYY`, `MM-DD-YYYY`, `MMDDYYYY`, `MM/DD/YY` (year expanded to `20YY`), and combinations thereof.
 
-2. Viewing all tasks:
+1. Viewing all tasks:
 
 ```bash
 ./target/release/todo_cli view
 ```
 
-```
+```text
 ────────────────────────────────────────
 Buy groceries (Important)
 Don't forget milk
@@ -97,7 +97,7 @@ Walk the dog
 ────────────────────────────────────────
 ```
 
-3. Marking a task as completed:
+1. Marking a task as completed:
 
 ```bash
 ./target/release/todo_cli done
@@ -105,7 +105,7 @@ Walk the dog
 
 If no ID is provided, your tasks are listed with their hex IDs and you are prompted to enter one:
 
-```
+```text
 ID: 3D
 ────────────────────────────────────────
 Buy groceries (Important)
@@ -123,7 +123,7 @@ You can also pass the ID directly:
 ./target/release/todo_cli done 3D
 ```
 
-4. Editing a task:
+1. Editing a task:
 
 ```bash
 ./target/release/todo_cli edit 3D
@@ -131,7 +131,7 @@ You can also pass the ID directly:
 
 You are prompted for each field. Press Enter to keep the current value.
 
-```
+```text
 Description [Buy groceries]:
 
 Due date [01/15/2026]:
@@ -154,13 +154,13 @@ Test Note
 ────────────────────────────────────────
 ```
 
-5. Showing help:
+1. Showing help:
 
 ```bash
 ./target/release/todo_cli help
 ```
 
-```
+```text
 New:  Create a new task
 Edit: Modify an existing task
 Done: Mark a task as complete
