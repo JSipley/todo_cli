@@ -25,8 +25,7 @@ impl TaskManager {
     }
 
     pub fn save_tasks(&self, filename: &str) -> Result<(), Box<dyn Error>> {
-        write_to_xml(filename, &self.tasks)?;
-        Ok(())
+        write_to_xml(filename, &self.tasks)
     }
 
     pub fn find_task_by_id(&self, id: &str) -> Option<&Task> {
